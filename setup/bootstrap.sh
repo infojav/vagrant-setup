@@ -47,6 +47,10 @@ echo "@jav: -----> Composer"
 curl -sS https://getcomposer.org/installer | php
 sudo mv composer.phar /usr/local/bin/composer
 
+# ------- Install Java
+echo "@jav: -----> Java"
+sudo apt-get install default-jre
+sudo apt-get install default-jdk
 
 # ------- nodejs -----
 echo "@jav: -----> Installing nodejs"
@@ -60,6 +64,8 @@ sudo npm install -g grunt
 sudo npm install -g gulp
 sudo npm install -g express-generator
 sudo npm install -g yo
+sudo npm install -g protractor
+sudo webdriver-manager update
 
 # ------- Postgress ---
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
