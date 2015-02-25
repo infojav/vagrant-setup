@@ -50,7 +50,23 @@ sudo mv composer.phar /usr/local/bin/composer
 # ------- Install Java
 echo "@jav: -----> Java"
 sudo apt-get install default-jre
-sudo apt-get install default-jdk
+#udo apt-get install default-jdk
+
+# ------- Install Xvfb - X Virtual Frame Buffer
+# For webdriver headless
+echo "@jav: -----> Installing Xvfb"
+sudo apt-get install -y xvfb
+export DISPLAY=:10
+sudo apt-get install -y xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrillic 
+sudo apt-get install -y x11-xkb-utils xserver-xorg-core dbus-x11
+sudo apt-get install -y libfontconfig1-dev
+
+sudo mv xvfb /etc/init.d/xvfb
+sudo chmod a+x /etc/init.d/xvfb
+sudo update-rc.d /etc/init.d/xvfb defaults
+
+# ------- Install Browsers
+sudo apt-get install -y chromium-browser firefox
 
 # ------- nodejs -----
 echo "@jav: -----> Installing nodejs"
@@ -66,6 +82,11 @@ sudo npm install -g express-generator
 sudo npm install -g yo
 sudo npm install -g protractor
 sudo webdriver-manager update
+sudo npm install -g phantomjs
+sudo npm install -g chromedriver
+
+# ------- Selenium
+# .... Continue.
 
 # ------- Postgress ---
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
@@ -99,3 +120,5 @@ echo "@jav: ** nginx **"
 sudo service nginx restart
 echo "@jav: ** postgresql **"
 sudo /etc/init.d/postgresql restart
+
+
