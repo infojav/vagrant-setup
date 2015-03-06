@@ -61,9 +61,9 @@ sudo apt-get install -y xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrill
 sudo apt-get install -y x11-xkb-utils xserver-xorg-core dbus-x11
 sudo apt-get install -y libfontconfig1-dev
 
-sudo mv xvfb /etc/init.d/xvfb
+sudo mv /vagrant/setup/xvfb /etc/init.d/xvfb
 sudo chmod a+x /etc/init.d/xvfb
-sudo update-rc.d /etc/init.d/xvfb defaults
+sudo update-rc.d xvfb defaults
 
 # ------- Install Browsers
 sudo apt-get install -y chromium-browser firefox
@@ -75,6 +75,9 @@ sudo apt-get update
 sudo apt-get purge -y node nodejs nodejs-legacy npm
 sudo apt-get install -y nodejs
 sudo apt-get install -y npm
+
+# ------- some npms
+echo "@jav: -----> Installing some npms"
 sudo npm install -g bower
 sudo npm install -g grunt
 sudo npm install -g gulp
@@ -86,7 +89,27 @@ sudo npm install -g phantomjs
 sudo npm install -g chromedriver
 
 # ------- Selenium
-# .... Continue.
+echo "@jav: ------> Installing selenium"
+sudo /usr/sbin/useradd -m -s /bin/bash -d /home/selenium selenium
+sudo mkdir /usr/local/share/selenium
+wget http://selenium.googlecode.com/files/selenium-server-standalone-2.37.0.jar
+sudo mv selenium-server-standalone-2.37.0.jar /usr/local/share/selenium
+sudo chown -R selenium:selenium /usr/local/share/selenium
+
+sudo mkdir /var/log/selenium
+sudo chown selenium:selenium /var/log/selenium
+
+sudo mv /vagrant/setup/selenium /etc/init.d/selenium
+sudo chown root:root /etc/init.d/selenium
+sudo chmod a+x /etc/init.d/selenium
+sudo update-rc.d selenium defaults
+
+sudo touch /phantomjsdriver.log
+sudo chmod 666 /phantomjsdriver.log
+
+# -------- Imagemagick
+echo "@jav: ------> Installing imagemagick"
+sudo apt-get install -y imagemagick
 
 # ------- Postgress ---
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
