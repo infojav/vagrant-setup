@@ -56,7 +56,6 @@ sudo apt-get install default-jre
 # For webdriver headless
 echo "@jav: -----> Installing Xvfb"
 sudo apt-get install -y xvfb
-export DISPLAY=:10
 sudo apt-get install -y xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrillic 
 sudo apt-get install -y x11-xkb-utils xserver-xorg-core dbus-x11
 sudo apt-get install -y libfontconfig1-dev
@@ -64,6 +63,10 @@ sudo apt-get install -y libfontconfig1-dev
 sudo mv /vagrant/setup/xvfb /etc/init.d/xvfb
 sudo chmod a+x /etc/init.d/xvfb
 sudo update-rc.d xvfb defaults
+
+cat << EOF | sudo tee -a /etc/environment
+export DISPLAY=:10
+EOF
 
 # ------- Install Browsers
 sudo apt-get install -y chromium-browser firefox
