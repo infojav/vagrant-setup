@@ -1,1 +1,0 @@
-{"virtualbox":{"/vagrant":{"guestpath":"/vagrant","hostpath":"/home/javier/Dev/servers/node_u14_04","disabled":false},"/srv":{"create":true,"guestpath":"/srv","hostpath":"/home/javier/Dev/src","disabled":false}}}
