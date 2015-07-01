@@ -5,7 +5,7 @@ This is a simple vagrant setup.
 ## Packages Included
 
   - Ubuntu Trusty64
-  - Ngnix
+  - Nginx
   - nodejs
   - Php
   - composer
