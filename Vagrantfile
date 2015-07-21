@@ -17,6 +17,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     5432 => 54320,    #pgsql
     6379 => 63790,    #redis
     27017 => 27017,   #mongodb
+    8100 => 81000,    #android debuger
+    35729 => 35729,   #
   }
   
   # Use Default Port Forwarding Unless Overridden
@@ -27,7 +29,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.network "private_network", ip: "192.168.33.10"
 
   config.vm.provider :virtualbox do |v|
-    v.customize ["modifyvm", :id, "--memory", "1024"]
+    v.customize ["modifyvm", :id, "--memory", "1024", "--usb", "on"]
+    v.customize ["usbfilter", "add", "0", "--target", :id, "--name", "android", "--vendorid", "0x18d1"]
   end
 
   config.ssh.shell = "bash -c 'BASH_ENV=/etc/profile exec bash'"  
