@@ -17,7 +17,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     5432 => 54320,    #pgsql
     6379 => 63790,    #redis
     27017 => 27017,   #mongodb
-    8100 => 81000,    #android debuger
+    8100 => 8100,    #android debuger
     35729 => 35729,   #
   }
   
