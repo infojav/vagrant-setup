@@ -1,9 +1,27 @@
 #!/usr/bin/env bash
+#
+
+# Installation Options ##############################################
+
+nginx=true
+curl=true
+git=true 
+redis=true
+mysql=true
+mongodb=true
+memcached=true
+php5=true
+java=true 
+android_sdk=true
+webdriver=true
+nodejs=true
+imagemagick=true 
+postgresql=true
 
 # params ############################################################
 
 mysqlUser='remoteAdmin'
-mysqlRootPwd=1234
+mysqlRootPwxd=1234
 mysqlUserPwd=$mysqlRootPwd
 mysqlBindIp=0.0.0.0
 mysqlExternalAccess=true
@@ -16,10 +34,10 @@ pgsqlExternalAccess=true
 
 printf "\033c" #clear screen
 #sudo apt-get update
-#sudo locale-gen "en_GB.UTF-8"
+sudo locale-gen "en_GB.UTF-8"
 
 # ------- Ngnix ------
-if  dpkg -s nginx &>/dev/null; then
+if  [ ! dpkg -s nginx &>/dev/null ] && [ $nginx = true ]; then
 	echo "-----------------------------------------------------------------------------"
 	echo "@infojav: -----> Installing Ngnix"
 	echo "-----------------------------------------------------------------------------"
@@ -37,15 +55,16 @@ if  dpkg -s nginx &>/dev/null; then
 fi
 
 # ------- Curl -------
-if ! dpkg -s curl &>/dev/null; then
+if [ ! dpkg -s curl &>/dev/null ] && [ $curl = true ]; then
 	echo "-----------------------------------------------------------------------------"
 	echo "@infojav: -----> Installing Curl"
 	echo "-----------------------------------------------------------------------------"
 	sudo apt-get install -y curl
+	sudo apt-get install -y build-essential g++
 fi
 
 # ------- Git --------
-if ! dpkg -s git &>/dev/null; then
+if [ ! dpkg -s git &>/dev/null ] && [ $git = true ]; then
 	echo "-----------------------------------------------------------------------------"
 	echo "@infojav: -----> Installing git"
 	echo "-----------------------------------------------------------------------------"
@@ -53,15 +72,39 @@ if ! dpkg -s git &>/dev/null; then
 fi
 
 # ------- Redis ------
-if ! dpkg -s redis-server &>/dev/null; then
+if [ ! dpkg -s redis-server &>/dev/null ] && [ $redis = true ]; then
 	echo "-----------------------------------------------------------------------------"
 	echo "@infojav: -----> Installing redis"
 	echo "-----------------------------------------------------------------------------"
 	sudo apt-get install -y redis-server
 fi
 
+# -------- Postgress ---
+if [ ! dpkg -s postgresql-9.4 &>/dev/null ] && [ $postgresql = true ]; then
+	echo "-----------------------------------------------------------------------------"
+	echo "@infojav: ------> Installing portgresql"
+	echo "-----------------------------------------------------------------------------"
+	wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+	if [ ! -f /etc/apt/sources.list.d/pgdg.list ]; then
+		sudo echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main 9.4" >> pgdg.list
+		sudo cp pgdg.list /etc/apt/sources.list.d/pgdg.list
+		sudo apt-get update
+	fi
+	sudo apt-get -y install postgresql-9.4 postgresql-client-9.4
+
+	# Changing to dummy password" 
+	sudo -u postgres psql postgres -c "ALTER USER postgres WITH ENCRYPTED PASSWORD '$pgsqlPwd'"
+
+	if $pgsqlExternalAccess; then
+		pgConfFile=/etc/postgresql/9.4/main/postgresql.conf
+		pgHbaFile=/etc/postgresql/9.4/main/pg_hba.conf
+		sudo sed -i.bak "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" $pgConfFile
+		sudo printf "\nhost    all             all             10.0.2.2/32            md5\n" >> $pgHbaFile
+	fi
+fi
+
 # ------- mysql ------
-if ! dpkg -s mysql-server &>/dev/null; then
+if [ ! dpkg -s mysql-server &>/dev/null ] && [ $mysql = true ]; then
 	sudo apt-get install -y debconf-utils
 	debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysqlRootPwd"
 	debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysqlRootPwd"
@@ -80,7 +123,7 @@ if ! dpkg -s mysql-server &>/dev/null; then
 fi
 
 # ------- MongoDB ----
-if ! dpkg -s mongodb &>/dev/null; then
+if [ ! dpkg -s mongodb &>/dev/null ] && [ $mongodb = true ]; then
 	echo "-----------------------------------------------------------------------------"
 	echo "@infojav: -----> Installing mongodb"
 	echo "-----------------------------------------------------------------------------"
@@ -89,7 +132,7 @@ fi
 
 
 # ------- Memcached --
-if ! dpkg -s memcached &>/dev/null; then
+if [ ! dpkg -s memcached &>/dev/null ] && [ $memcahed = true ]; then
 	echo "-----------------------------------------------------------------------------"
 	echo "@infojav: -----> Installing Memcached"
 	echo "-----------------------------------------------------------------------------"
@@ -97,7 +140,7 @@ if ! dpkg -s memcached &>/dev/null; then
 fi
 
 # ------- PHP5 -------
-if ! dpkg -s php5 &>/dev/null; then
+if [ ! dpkg -s php5 &>/dev/null ] && [ $php5 = true ]; then
 	echo "-----------------------------------------------------------------------------"
 	echo "@infojav: -----> Installing PHP5"
 	echo "-----------------------------------------------------------------------------"
@@ -122,27 +165,62 @@ EOF
 	sudo mv composer.phar /usr/local/bin/composer
 fi
 
-# ------- Install Java
-if ! dpkg -s default-jre &>/dev/null; then
+# ------- Install Java & Android SDK
+if [ ! dpkg -s oracle-java8-installer &>/dev/null ] && [ $java = true ]; then
 	echo "-----------------------------------------------------------------------------"
 	echo "@infojav: -----> Java"
 	echo "-----------------------------------------------------------------------------"
-	sudo apt-get install default-jre
-	#sudo apt-get install default-jdk
+	#sudo apt-get install -y debconf-utils
+	#sudo apt-add-repository -y ppa:webupd8team/java
+	sudo apt-get update
+	echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
+	echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
+	sudo apt-get install -y oracle-java8-installer
+
+
+	if [ ! dpkg -s ant &>/dev/null ] && [ $android_sdk = true ]; then
+		echo "-----------------------------------------------------------------------------"
+		echo "@infojav: -----> Android SDK"
+		echo "-----------------------------------------------------------------------------"
+		#
+		# http://askubuntu.com/questions/464400/comprehensive-guide-to-setup-android-sdk-with-eclipse-on-ubuntu-14-04-lts-64-bit
+		#
+		
+		sudo apt-get -y install ant
+
+		# For android development
+		sudo dpkg --add-architecture i386
+		sudo apt-get update
+		sudo apt-get install -y lib32z1 libncurses5:i386 libstdc++6:i386 zlib1g:i386
+
+		sdkDownloadFile=android-sdk_r24.3.3-linux.tgz
+		if [ ! -f sdkDownloadFile]; then
+			wget --quiet https://dl.google.com/android/android-sdk_r24.3.3-linux.tgz
+		fi
+		tar -xvzf android-sdk_r24.3.3-linux.tgz
+		
+		profileFile=/home/vagrant/.profile
+		echo '' >> $profileFile
+		echo '# Android SDK' >> $profileFile
+		echo 'export ANDROID_SDK_HOME="/home/vagrant/android-sdk-linux"' >> $profileFile
+		echo 'export PATH="$PATH:$ANDROID_SDK_HOME/tools"' >> $profileFile
+		echo 'export PATH="$PATH:$ANDROID_SDK_HOME/platform-tools"' >> $profileFile
+		source $profileFile
+	fi
 fi
 
 # ------- Install Xvfb - X Virtual Frame Buffer
 # For webdriver headless
-if ! dpkg -s xvfb &>/dev/null; then
+if [ ! dpkg -s xvfb &>/dev/null ] && [ $webdriver = true ]; then
 	echo "-----------------------------------------------------------------------------"
 	echo "@infojav: -----> Installing Xvfb"
 	echo "-----------------------------------------------------------------------------"
 	sudo apt-get install -y xvfb
 	sudo apt-get install -y xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrillic 
 	sudo apt-get install -y x11-xkb-utils xserver-xorg-core dbus-x11
-	sudo apt-get install -y libfontconfig1-dev
+	sudo apt-get install -y libfontconfig1-devecho
 
-	xvfbFile = /vagrant/setup/xvfb
+	xvfbFile=/vagrant/setup/xvfb
 	if [-f $xvfbFile]; then
 		sudo cp $xvfbFile /etc/init.d/xvfb
 	else
@@ -160,7 +238,7 @@ EOF
 fi
 
 # ------- nodejs -----
-if ! dpkg -s nodejs &>/dev/null; then
+if [ ! dpkg -s nodejs &>/dev/null ] && [ $nodejs = true ]; then
 	echo "-----------------------------------------------------------------------------"
 	echo "@infojav: -----> Installing nodejs"
 	echo "-----------------------------------------------------------------------------"
@@ -179,14 +257,21 @@ if ! dpkg -s nodejs &>/dev/null; then
 	sudo npm install -g gulp
 	sudo npm install -g express-generator
 	sudo npm install -g yo
-	sudo npm install -g protractor
-	sudo webdriver-manager update
-	sudo npm install -g phantomjs
-	sudo npm install -g chromedriver
+
+	if [ $webdriver = true ]; then
+		sudo npm install -g protractor
+		sudo webdriver-manager update
+		sudo npm install -g phantomjs
+		sudo npm install -g chromedriver
+	fi
+
+	if [ $android_sdk = true ]; then
+		sudo npm install -g nativescript
+	fi
 fi
 
 # ------- Selenium
-if [ ! -f /etc/init.d/selenium ]; then
+if [ ! -f /etc/init.d/selenium ] && [ $webdriver = true ]; then
 	echo "-----------------------------------------------------------------------------"
 	echo "@infojav: ------> Installing selenium"
 	echo "-----------------------------------------------------------------------------"
@@ -217,68 +302,61 @@ if [ ! -f /etc/init.d/selenium ]; then
 fi
 
 # -------- Imagemagick
-if ! dpkg -s imagemagick &>/dev/null; then
+if [ ! dpkg -s imagemagick &>/dev/null ] && [ $imagemagick = true ]; then
 	echo "-----------------------------------------------------------------------------"
 	echo "@infojav: ------> Installing imagemagick"
 	echo "-----------------------------------------------------------------------------"
 	sudo apt-get install -y imagemagick
 fi
 
-# -------- Postgress ---
-if ! dpkg -s postgresql-9.4 &>/dev/null; then
-	echo "-----------------------------------------------------------------------------"
-	echo "@infojav: ------> Installing portgresql"
-	echo "-----------------------------------------------------------------------------"
-	wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-	if [ ! -f /etc/apt/sources.list.d/pgdg.list ]; then
-		sudo echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main 9.4" >> pgdg.list
-		sudo cp pgdg.list /etc/apt/sources.list.d/pgdg.list
-		sudo apt-get update
-	fi
-	sudo apt-get -y install postgresql-9.4 postgresql-client-9.4
 
-	# Changing to dummy password" 
-	sudo -u postgres psql postgres -c "ALTER USER postgres WITH ENCRYPTED PASSWORD '$pgsqlPwd'"
-
-	if $pgsqlExternalAccess; then
-		pgConfFile=/etc/postgresql/9.4/main/postgresql.conf
-		pgHbaFile=/etc/postgresql/9.4/main/pg_hba.conf
-		sudo sed -i.bak "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" $pgConfFile
-		sudo printf "\nhost    all             all             10.0.2.2/32            md5\n" >> $pgHbaFile
-	fi
-fi
 
 # -------- Starting services
 echo "-----------------------------------------------------------------------------"
 echo "@infojav: -----> Starting services"
 echo "-----------------------------------------------------------------------------"
-echo "@infojav: ** nginx **"
-sudo service nginx restart &>/dev/null
-nginx -v
-echo "-----------------------------------------------------------------------------"
-echo "@infojav: ** postgresql **"
-sudo service postgresql restart &>/dev/null
-psql --version
-echo "-----------------------------------------------------------------------------"
-echo "@infojav: ** mysql **"
-sudo service mysql restart &>/dev/null
-mysql --version
-echo "-----------------------------------------------------------------------------"
-echo "@infojav: ** redis **"
-sudo service redis-server restart &>/dev/null
-redis-server --version
-echo "-----------------------------------------------------------------------------"
-echo "@infojav: ** mongoDB **"
-sudo service mongodb restart &>/dev/null
-mongod --version
-echo "-----------------------------------------------------------------------------"
-echo "@infojav: ** php **"
-php --version
-echo "-----------------------------------------------------------------------------"
-echo "@infojav: ** nodejs **"
-nodejs --version
-echo "-----------------------------------------------------------------------------"
-
-
-
-
+if [ $nginx = true ]; then
+	echo "@infojav: ** nginx **"
+	sudo service nginx restart &>/dev/null
+	nginx -v
+	echo "-----------------------------------------------------------------------------"
+fi
+if [ $postgresql = true ]; then
+	echo "@infojav: ** postgresql **"
+	sudo service postgresql restart &>/dev/null
+	psql --version
+	echo "-----------------------------------------------------------------------------"
+fi
+if [ $mysql = true ]; then
+	echo "@infojav: ** mysql **"
+	sudo service mysql restart &>/dev/null
+	mysql --version
+	echo "-----------------------------------------------------------------------------"
+fi
+if [ $redis = true ]; then
+	echo "@infojav: ** redis **"
+	sudo service redis-server restart &>/dev/null
+	redis-server --version
+	echo "-----------------------------------------------------------------------------"
+fi
+if [ $mongodb = true ]; then
+	echo "@infojav: ** mongoDB **"
+	sudo service mongodb restart &>/dev/null
+	mongod --version
+	echo "-----------------------------------------------------------------------------"
+fi
+if [ $php5 = true ]; then
+	echo "@infojav: ** php **"
+	php --version
+	echo "-----------------------------------------------------------------------------"
+fi
+if [ $nodejs = true ]; then
+	echo "@infojav: ** nodejs **"
+	nodejs --version
+	echo "-----------------------------------------------------------------------------"
+fi
+if [ $java = true ]; then
+	echo "@infojav: ** java **"
+	java -version
+	echo "-----------------------------------------------------------------------------"
+fi
